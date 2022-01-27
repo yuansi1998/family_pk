@@ -65,10 +65,10 @@
             v-model="checkedNames"
           />
           <i></i>
-          对赌败方禁止进入广场
+          败方禁止进入广场
 
           <span class="score" @click="openDayDialog">
-            {{ dayList[dayIndex] }}
+            {{ dayList[dayIndex] }}天
             <div class="family-score" v-show="dayState">
               <div class="sub-title">请选择数量</div>
               <div
@@ -77,7 +77,7 @@
                   v-for="(item, index) in dayList"
                   :key="index"
               >
-                {{ item }}
+                {{ item }}天
               </div>
             </div>
           </span>
@@ -91,22 +91,7 @@
             v-model="checkedNames"
           />
           <i></i>
-          对赌
-          <span class="score" @click="openScoreDialog">
-            {{ familyScoreList[scoreIndex] }}
-            <div class="family-score" v-show="scoreState">
-              <div class="sub-title">请选择数量</div>
-              <div
-                class="list"
-                @click="checkFamilyScore(index)"
-                v-for="(item, index) in familyScoreList"
-                :key="index"
-              >
-                {{ item }}
-              </div><br>
-            </div>
-          </span>
-          家族活跃值
+          根据PK结果扣除败方家族总活跃度值
         </div>
       </div>
       <div class="create-btn" @click="cratePk">
@@ -146,16 +131,16 @@ export default {
   },
   data() {
     return {
-      familyScoreList: [10000, 20000, 50000, 100000],
-      dayList:['1天','2天','3天'],
+      // familyScoreList: [10000, 20000, 50000, 100000],
+      dayList:[1,2,3],
       dialogInfo: {
         status: false,
         title: "",
       },
       familyId: null,
-      scoreState: false,
+      // scoreState: false,
       dayState:false,
-      scoreIndex: 0,
+      // scoreIndex: 0,
       dayIndex:0,
       familyInfo: null,
       searchFamilyErrorText: "",
@@ -187,7 +172,7 @@ export default {
   },
   computed: {
     groupPunishDay() {
-      return this.checkedNames === "enter_group" ? 1 : 0;
+      return this.checkedNames === "enter_group" ? this.punishDayLength : 0;
     },
     punishDayLength() {
       const isDayLength = "enter_group" === this.checkedNames;
@@ -196,13 +181,13 @@ export default {
       }
       return 0;
     },
-    punishScoreAmount() {
-      const isFamilyScore = "family_score" === this.checkedNames;
-      if (isFamilyScore) {
-        return this.familyScoreList[this.scoreIndex];
-      }
-      return 0;
-    },
+    // punishScoreAmount() {
+    //   const isFamilyScore = "family_score" === this.checkedNames;
+    //   if (isFamilyScore) {
+    //     return this.familyScoreList[this.scoreIndex];
+    //   }
+    //   return 0;
+    // },
   },
   created() {
     this.initDate(this.timeType)
@@ -221,10 +206,10 @@ export default {
         this.dialogInfo.callBack();
       }
     },
-    checkFamilyScore(num) {
-      this.scoreIndex = num;
-      this.scoreState = true;
-    },
+    // checkFamilyScore(num) {
+    //   this.scoreIndex = num;
+    //   this.scoreState = true;
+    // },
     checkDayLength(num){
       this.dayIndex = num;
       this.dayState = true;
@@ -232,9 +217,9 @@ export default {
     openDayDialog(){
       this.dayState = !this.dayState;
     },
-    openScoreDialog() {
-      this.scoreState = !this.scoreState;
-    },
+    // openScoreDialog() {
+    //   this.scoreState = !this.scoreState;
+    // },
     clearFamilyInfo() {
       this.familyInfo = null;
       this.familyId = null;
@@ -271,8 +256,8 @@ export default {
       http.post("/family_fights/create", {
           "family_id": this.familyId,
           "group_punish_day": this.groupPunishDay,
-          "punish_score_amount": this.punishScoreAmount,
-          "punish_day_length": this.punishDayLength,
+          // "punish_score_amount": this.punishScoreAmount,
+          // "punish_day_length": this.punishDayLength,
           'duration':this.duration,
           'pk_type':this.pkType,
           'begin_time':this.beginAt
