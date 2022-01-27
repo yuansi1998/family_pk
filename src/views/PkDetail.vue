@@ -8,7 +8,8 @@
       <div class="right">{{ familyPkInfo.receiver_text }} {{ familyPkInfo.receiver_pk_score }}</div>
     </div>
     <div class="count-down" v-if="countdownText">
-      开启倒计时：{{ countdownText }}
+      <span v-if="!familyPkInfo.my_pk_status">开启倒计时：{{ countdownText }}</span>
+      <span v-if="familyPkInfo.my_pk_status">pk结束倒计时：{{ countdownText }}</span>
     </div>
     <div class="pk-info clearfix">
       <div class="user-family">
@@ -100,17 +101,21 @@
         我的火力值：<span class="score">{{ familyPkInfo.my_pk_score }}点</span>
       </div>
     </div>
-    <div
-      class="open-prize"
-      v-if="familyPkInfo.is_show_treasure"
-    >
-      <div class="open-after" v-if="familyPkInfo.is_open_treasure">
-        <div class="diamond-amount"><span>{{ familyPkInfo.prize_diamond_amount }}</span>钻石</div>
-        <img src="@/assets/image/open-after.png" alt="" class="img" />
-      </div>
-      <img v-else src="@/assets/image/open-img.png" @click="openPrizeTreasure" alt="" class="img" />
+<!--    <div class="open-prize" v-if="familyPkInfo.is_show_treasure">-->
+<!--      <div class="open-after" v-if="familyPkInfo.is_open_treasure">-->
+<!--        <div class="diamond-amount"><span>{{ familyPkInfo.prize_diamond_amount }}</span>钻石</div>-->
+<!--        <img src="@/assets/image/open-after.png" alt="" class="img" />-->
+<!--      </div>-->
+<!--      <img v-else src="@/assets/image/open-img.png" @click="openPrizeTreasure" alt="" class="img" />-->
+<!--    </div>-->
+    <div class="waring-tip">
+      <p class="waring-font" v-if="familyPkInfo.status == 2 && familyPkInfo.punish_type == 0 ">根据当前PK值预估败方家族扣减：{{ familyPkInfo.reduce_active_score }}活跃度</p>
+      <p class="waring-font" v-if="familyPkInfo.status != 3">PK惩罚：{{ familyPkInfo.punish_text }}</p>
+      <p class="waring-font" v-if="familyPkInfo.status == 3 && familyPkInfo.punish_type == 0 && familyPkInfo.receiver_pk_score != familyPkInfo.sender_pk_score">根据本场PK值败方家族将扣减：{{ familyPkInfo.reduce_active_score }}活跃度</p>
+      <p class="waring-font" v-if="familyPkInfo.status == 3 && familyPkInfo.punish_type == 0 && familyPkInfo.receiver_pk_score == familyPkInfo.sender_pk_score">本场PK结果为平局，双方都无活跃度扣</p>
+      <p class="waring-font" v-if="familyPkInfo.status == 3 && familyPkInfo.punish_type == 0 ">（PK惩罚：根据PK结果扣减败方家族总活跃度）</p>
+      <p class="waring-font" v-if="familyPkInfo.status == 3 && familyPkInfo.punish_type == 1 ">PK惩罚：{{ familyPkInfo.punish_text }}</p>
     </div>
-    <div class="waring-tip">PK惩罚：{{ familyPkInfo.punish_text }}</div>
     <div class="data-list">
       <div class="no-data" v-if="!fightHistories">
         <img src="@/assets/image/no-data.png" alt="" class="icon" />
@@ -138,9 +143,9 @@
       <div class="title">家族PK规则说明：</div>
       <div class="text">
         1、PK时间内通过消耗火力值兑换置顶道具扔出增加伤害值<br />
-        2、每赠送1个【同心火炬】礼物可获得1点火力值<br />
-        3、PK时间结束后，血条伤害值高的一方获胜<br />
-        4、天降宝箱：家族伤害值>10000点，可获得天降宝箱奖励，每位参与人员可开启一次<br />
+        2、火力值获取：赠送 [同心火炬] 可获得 1点火力值 <br />
+        3、PK方式：消耗火力值兑换指定道具扔出，可造成伤害<br />
+        4、获胜方式：PK结束后，血条值高的一方获胜<br />
       </div>
     </div>
     <div
@@ -363,6 +368,11 @@ export default {
             this.fightHistories.unshift(res.history);
             const familyKey = res.history.from_family;
             this.familyPkInfo[`${familyKey}_pk_score`] += res.history.total_amount;
+            this.familyPkInfo['reduce_active_score'] = res.history.reduce_active_score;
+            this.familyPkInfo['status'] = res.history.status;
+            this.familyPkInfo['receiver_pk_score'] = res.history.receiver_pk_score;
+            this.familyPkInfo['sender_pk_score'] = res.history.sender_pk_score;
+            this.familyPkInfo['punish_type'] = res.history.punish_type;
           }
         });
     },
@@ -417,22 +427,22 @@ export default {
       }
       this.openDialogStatus = status;
     },
-    openPrizeTreasure() {
-      http
-        .get("/family_fights/open_treasure", {
-          params: {
-            "family_pk_id": this.familyPkInfo.id
-          }
-        })
-        .then(res => {
-          if (res.error_code === 0) {
-            this.prizeDialogAmount = res.amount;
-            this.popupVisible(true);
-            return;
-          }
-          this.$refs.tips.showTips(res.error_reason);
-        });
-    },
+    // openPrizeTreasure() {
+    //   http
+    //     .get("/family_fights/open_treasure", {
+    //       params: {
+    //         "family_pk_id": this.familyPkInfo.id
+    //       }
+    //     })
+    //     .then(res => {
+    //       if (res.error_code === 0) {
+    //         this.prizeDialogAmount = res.amount;
+    //         this.popupVisible(true);
+    //         return;
+    //       }
+    //       this.$refs.tips.showTips(res.error_reason);
+    //     });
+    // },
     familyDataLoop() {
       this.loop = setInterval(() => {
         this.getFamilyPkDetail();
@@ -569,6 +579,12 @@ export default {
   color: #fff;
   background: url("../assets/image/count-down-bg.png") no-repeat 50% 50%;
   background-size: contain;
+  span{
+    line-height: 46px;
+    text-align: center;
+    font-size: 22px;
+    color: #fff;
+  }
 }
 .pk-info {
   position: relative;
@@ -732,14 +748,17 @@ export default {
 }
 .waring-tip {
   width: 689px;
-  line-height: 90px;
+  padding: 20px;
   margin: 27px auto 38px;
-  font-size: 28px;
-  font-weight: bold;
-  color: #5d1111;
-  text-align: center;
   background: url(../assets/image/waring-bg.png) no-repeat 50% 50%;
   background-size: 100% 100%;
+
+  .waring-font{
+    font-size: 28px;
+    font-weight: bold;
+    color: #5d1111;
+    text-align: center;
+  }
 }
 .data-list {
   width: 690px;
@@ -824,7 +843,7 @@ export default {
   border-radius: 49px;
 }
 .top-users {
-  padding: 35px 48px 0;
+  padding: 35px 48px 12px;
   overflow: hidden;
   .user-list {
     display: flex;
@@ -894,17 +913,17 @@ export default {
     .score {
       position: absolute;
       left: 50%;
-      bottom: 0;
-      width: 80px;
+      bottom: -12px;
       height: 38px;
       background: rgba(255, 184, 41, 0.8);
       border-radius: 24px;
       font-size: 24px;
       line-height: 38px;
       text-align: center;
-      transform: translateX(-50%) scale(0.5);
+      transform: translateX(-50%) scale(0.7);
       transform-origin: 50% 100%;
       color: #ffffff;
+      white-space: nowrap;
     }
   }
   .left {
